@@ -1,0 +1,88 @@
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+import torch
+
+Model_name = 'facebook/nllb-200-distilled-600m'
+tokenizer = AutoTokenizer.from_pretrained(Model_name)
+model = AutoModelForSeq2SeqLM.from_pretrained(Model_name)
+print("Model Loaded successfully!\n")
+
+LANGUAGES = {
+    "english": "eng_Latn", "en": "eng_Latn",
+    "french": "fra_Latn", "fr": "fra_Latn",
+    "german": "deu_Latn", "de": "deu_Latn",
+    "spanish": "spa_Latn", "es": "spa_Latn",
+    "portuguese": "por_Latn", "pt": "por_Latn",
+    "italian": "ita_Latn", "it": "ita_Latn",
+    "russian": "rus_Cyrl", "ru": "rus_Cyrl",
+    "arabic": "arb_Arab", "ar": "arb_Arab",
+    "persian": "pes_Arab", "farsi": "pes_Arab", "fa": "pes_Arab",
+    "hebrew": "heb_Hebr", "he": "heb_Hebr",
+    "turkish": "tur_Latn", "tr": "tur_Latn",
+    "chinese": "zho_Hans", "zh": "zho_Hans",
+    "chinese_traditional": "zho_Hant", "zh-t": "zho_Hant",
+    "japanese": "jpn_Jpan", "ja": "jpn_Jpan",
+    "korean": "kor_Hang", "ko": "kor_Hang",
+    "thai": "tha_Thai", "th": "tha_Thai",
+    "vietnamese": "vie_Latn", "vi": "vie_Latn",
+    "indonesian": "ind_Latn", "id": "ind_Latn",
+    "malay": "msa_Latn", "ms": "msa_Latn",
+    "swahili": "swh_Latn", "sw": "swh_Latn",
+    "hindi": "hin_Deva", "hi": "hin_Deva",
+    "tamil": "tam_Taml", "ta": "tam_Taml",
+    "telugu": "tel_Telu", "te": "tel_Telu",
+    "kannada": "kan_Knda", "kn": "kan_Knda",
+    "malayalam": "mal_Mlym", "ml": "mal_Mlym",
+    "bengali": "ben_Beng", "bn": "ben_Beng",
+    "marathi": "mar_Deva", "mr": "mar_Deva",
+    "gujarati": "guj_Gujr", "gu": "guj_Gujr",
+    "punjabi": "pan_Guru", "pa": "pan_Guru",
+    "punjabi_pakistan": "pan_Arab", "pa-pk": "pan_Arab",
+    "urdu": "urd_Arab", "ur": "urd_Arab",
+    "odia": "ory_Orya", "or": "ory_Orya",
+    "assamese": "asm_Beng", "as": "asm_Beng",
+    "sanskrit": "san_Deva", "sa": "san_Deva",
+    "nepali": "npi_Deva", "ne": "npi_Deva",
+    "kashmiri": "kas_Arab", "ks": "kas_Arab",
+    "sindhi": "snd_Arab", "sd": "snd_Arab",
+    "maithili": "mai_Deva", "mai": "mai_Deva",
+    "dogri": "doi_Deva", "doi": "doi_Deva",
+    "konkani": "gom_Deva", "kok": "gom_Deva",
+    "bodo": "brx_Deva", "brx": "brx_Deva",
+    "manipuri": "mni_Beng", "mni": "mni_Beng"
+}
+
+def translate(text, source_lang, target_lang):
+  src_code= LANGUAGES[source_lang]
+  tgt_code = LANGUAGES[target_lang]
+  tokenizer.src_lang = src_code
+  inputs = tokenizer(text, return_tensors ='pt', padding=True)
+
+  with torch.no_grad():
+    translated_tokens = model.generate(
+        **inputs,
+        forced_bos_token_id = tokenizer.convert_tokens_to_ids(tgt_code),
+        max_length=256
+        )
+    return tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)
+print(" UNIVERSAL MULTI-LANGUAGE TRANSLATOR")
+print("------------------------------------")
+print("Available Languages:\n")
+
+for lang in LANGUAGES.keys():
+  print(".",lang.title())
+
+print("\n------------")
+source_language = input("Enter Source language name:").strip().lower()
+target_language = input("Enter target language name(comma-separated):").strip().lower()
+text = input("\n enter text to translate:\n")
+
+print("\n------------------------------------")
+
+if source_language not in LANGUAGES:
+  print("\n invalid source language name.")
+elif target_language not in LANGUAGES:
+  print("\n invalid target language name.")
+else:
+  output = translate(text, source_language, target_language)
+  print("\n translated output:\n")
+  print(output)
